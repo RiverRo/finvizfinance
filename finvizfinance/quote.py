@@ -18,7 +18,7 @@ from finvizfinance.util import (
     format_datetime,
 )
 
-QUOTE_URL = "https://finviz.com/quote.ashx?t={ticker}"
+QUOTE_URL = "https://finviz.com/stock?t={ticker}"
 NUM_COL = [
     "P/E",
     "EPS (ttm)",
