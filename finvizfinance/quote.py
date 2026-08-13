@@ -141,12 +141,23 @@ class finvizfinance:
         fundament_info["Company"] = self.soup.find(
             "h2", class_="quote-header_ticker-wrapper_company"
         ).text.strip()
-        quote_links = self.soup.find("div", class_="quote-links")
-        links = quote_links.find_all("a")
-        fundament_info["Sector"] = links[0].text
-        fundament_info["Industry"] = links[1].text
-        fundament_info["Country"] = links[2].text
-        fundament_info["Exchange"] = links[3].text
+        # The old "quote-links" div is gone; the category links now live in
+        # "quote-header_categories" and market cap sits between country and
+        # exchange, so match on the screener filter in each href instead of
+        # relying on position.
+        categories = self.soup.find("div", class_="quote-header_categories")
+        prefixes = {
+            "sec_": "Sector",
+            "ind_": "Industry",
+            "geo_": "Country",
+            "exch_": "Exchange",
+        }
+        for link in categories.find_all("a"):
+            href = link.get("href", "")
+            for prefix, key in prefixes.items():
+                if "f={}".format(prefix) in href:
+                    fundament_info[key] = link.text
+                    break
 
         fundament_table = self.soup.find("table", class_="snapshot-table2")
         rows = fundament_table.find_all("tr")
