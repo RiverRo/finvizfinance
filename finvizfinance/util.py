@@ -47,9 +47,15 @@ def web_scrap(url, params=None):
         website.raise_for_status()
         soup = BeautifulSoup(website.text, "lxml")
     except requests.exceptions.HTTPError as err:
-        raise requests.exceptions.HTTPError(f"HTTP error for URL {url}: {err}")
+        # Carry the response through. Rebuilding the exception from just a
+        # message dropped it, leaving callers unable to read the status code —
+        # so a terminal 404 was indistinguishable from a retryable 429.
+        raise requests.exceptions.HTTPError(
+            f"HTTP error for URL {url}: {err}",
+            response=err.response, request=err.request,
+        ) from err
     except requests.exceptions.Timeout as err:
-        raise requests.exceptions.Timeout(f"Timeout for URL {url}: {err}")
+        raise requests.exceptions.Timeout(f"Timeout for URL {url}: {err}") from err
     return soup
 
 
