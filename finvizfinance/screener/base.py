@@ -102,7 +102,7 @@ class Base:
     def _get_page(self, soup):
         """Check the page number"""
         try:
-            options = soup.find(id="pageSelect").findAll("option")
+            options = soup.find(id="pageSelect").find_all("option")
             return len(options)
         except:
             return 0
@@ -120,7 +120,7 @@ class Base:
         frame = []
         ticker_col = table_header.index("Ticker") if "Ticker" in table_header else -1
         for row in rows:
-            cols = row.findAll("td")[1:]
+            cols = row.find_all("td")[1:]
             info_dict = {}
             for i, col in enumerate(cols):
                 # check if the col is number
@@ -151,8 +151,8 @@ class Base:
     @staticmethod
     def _parse_table_header(soup):
         table = soup.find("table", class_="screener_table")
-        rows = table.findAll("tr")
-        table_headers = [i.text.strip() for i in rows[0].findAll("th")][1:]
+        rows = table.find_all("tr")
+        table_headers = [i.text.strip() for i in rows[0].find_all("th")][1:]
         return table_headers
 
     def _parse_table(self, df, soup, limit):
