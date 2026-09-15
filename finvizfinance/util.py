@@ -59,6 +59,27 @@ def web_scrap(url, params=None):
     return soup
 
 
+def ticker_from_cell(col):
+    """Extract the ticker from a table cell.
+
+    Finviz prepends a logo placeholder holding the first letter of the ticker,
+    so col.text returns the ticker with its first letter doubled.
+
+    Args:
+        col(bs4.element.Tag): table cell containing a ticker
+    Returns:
+        ticker(str): ticker symbol
+    """
+    ticker = col.get("data-boxover-ticker")
+    if ticker:
+        return ticker
+    for a_tag in col.find_all("a", href=True):
+        href = a_tag["href"]
+        if "t=" in href:
+            return href.split("t=")[1].split("&")[0]
+    return col.get_text(strip=True)
+
+
 def image_scrap(url, ticker, out_dir):
     """scrap website and download image
 

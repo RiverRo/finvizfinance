@@ -14,6 +14,7 @@ from finvizfinance.util import (
     web_scrap,
     number_covert,
     progress_bar,
+    ticker_from_cell,
 )
 from finvizfinance.constants import NUMBER_COL, signal_dict, filter_dict, order_dict
 
@@ -124,20 +125,8 @@ class Base:
             info_dict = {}
             for i, col in enumerate(cols):
                 # check if the col is number
-                # if i not in num_col_index:
-                # Finviz wraps the ticker in two <a> tags (company-ticker with
-                # logo + tab-link), so col.text returns the ticker doubled.
-                # Extract the real ticker from the href query parameter instead.
                 if i == ticker_col:
-                    a_tag = col.find("a", class_="company-ticker")
-                    if a_tag:
-                        href = a_tag.get("href", "")
-                        if "t=" in href:
-                            info_dict[table_header[i]] = href.split("t=")[1].split("&")[0]
-                        else:
-                            info_dict[table_header[i]] = a_tag.get_text(strip=True)
-                    else:
-                        info_dict[table_header[i]] = col.text
+                    info_dict[table_header[i]] = ticker_from_cell(col)
                 elif i not in num_col_index:
                     info_dict[table_header[i]] = col.text
                 else:

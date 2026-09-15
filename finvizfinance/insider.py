@@ -6,7 +6,7 @@
 """
 
 import pandas as pd
-from finvizfinance.util import web_scrap, number_covert
+from finvizfinance.util import web_scrap, number_covert, ticker_from_cell
 
 INSIDER_URL = "https://finviz.com/insidertrading"
 
@@ -63,10 +63,13 @@ class Insider:
         Returns:
             df(pandas.DataFrame): insider information table
         """
-        # print(self.soup.prettify())
-        insider_trader = self.soup.find_all("table")[6]
+        insider_trader = next(
+            table
+            for table in self.soup.find_all("table")
+            if table.find("tr")
+            and "Ticker" in [th.text.strip() for th in table.find("tr").find_all("th")]
+        )
         rows = insider_trader.find_all("tr")
-        # print(rows)
         table_header = [i.text.strip() for i in rows[0].find_all("th")] + [
             "SEC Form 4 Link"
         ]
@@ -80,7 +83,9 @@ class Insider:
                 continue
             info_dict = {}
             for i, col in enumerate(cols):
-                if i not in num_col_index:
+                if table_header[i] == "Ticker":
+                    info_dict[table_header[i]] = ticker_from_cell(col)
+                elif i not in num_col_index:
                     info_dict[table_header[i]] = col.text
                     if i == len(cols) - 1:
                         info_dict["SEC Form 4 Link"] = col.find("a").attrs["href"]
