@@ -141,26 +141,29 @@ class finvizfinance:
         fundament_info["Company"] = self.soup.find(
             "h2", class_="quote-header_ticker-wrapper_company"
         ).text.strip()
-        # The old "quote-links" div is gone; the category links now live in
-        # "quote-header_categories" and market cap sits between country and
-        # exchange, so match on the screener filter in each href instead of
-        # relying on position.
-        categories = self.soup.find("div", class_="quote-header_categories")
-        prefixes = {
+        # Header category links are screener filters; match by filter prefix
+        # since Finviz inserts extra links (e.g. market cap) between them.
+        category_prefixes = {
             "sec_": "Sector",
             "ind_": "Industry",
             "geo_": "Country",
             "exch_": "Exchange",
         }
-        for link in categories.find_all("a"):
-            href = link.get("href", "")
-            for prefix, key in prefixes.items():
-                if "f={}".format(prefix) in href:
-                    fundament_info[key] = link.text
-                    break
+        categories = self.soup.find(
+            "div", class_="quote-header_categories"
+        ) or self.soup.find("div", class_="quote-links")
+        for link in categories.find_all("a", href=True):
+            filter_code = link["href"].split("f=")[-1]
+            for prefix, key in category_prefixes.items():
+                if filter_code.startswith(prefix):
+                    fundament_info[key] = link.text.strip()
 
-        fundament_table = self.soup.find("table", class_="snapshot-table2")
-        rows = fundament_table.find_all("tr")
+        # The snapshot is split across several tables (one per stat column).
+        rows = [
+            row
+            for table in self.soup.find_all("table", class_="snapshot-table2")
+            for row in table.find_all("tr")
+        ]
 
         for row in rows:
             cols = row.find_all("td")

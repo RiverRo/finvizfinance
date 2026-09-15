@@ -176,9 +176,9 @@ def number_covert(num):
     Return:
         num(float or None): number converted to float or None
     """
+    num = num.strip() if num else num  # Remove any surrounding whitespace
     if not num or num == "-":  # Check if the string is empty or is "-"
         return None
-    num = num.strip()  # Remove any surrounding whitespace
     if num[-1] == "%":
         return float(num[:-1]) / 100
     elif num[-1] == "B":

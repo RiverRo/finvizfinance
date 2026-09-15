@@ -6,6 +6,7 @@
 """
 
 import json
+import re
 import pandas as pd
 from finvizfinance.util import web_scrap
 
@@ -37,11 +38,12 @@ class Future:
 
         soup = web_scrap("https://finviz.com/futures_performance.ashx", params)
 
-        html = soup.prettify()
-        data = html[
-            html.find("var rows = ")
-            + 11 : html.find("FinvizInitFuturesPerformance(rows);")
-        ]
-        data = json.loads(data.strip()[:-1])
+        # Rows are passed inline: window.FinvizInitFuturesPerformance([...])
+        match = re.search(
+            r"FinvizInitFuturesPerformance\((\[.*?\])\)", str(soup), re.DOTALL
+        )
+        if match is None:
+            raise ValueError("Futures performance data not found on page")
+        data = json.loads(match.group(1))
         df = pd.DataFrame(data)
         return df
