@@ -23,11 +23,16 @@ class Ticker(Base):
     v_page = 411
 
     def _screener_helper(self, i, page, soup, tickers, limit):
-        td = soup.find("td", class_="screener-tickers")
+        td = soup.find("td", class_="screener_tickers") or soup.find(
+            "td", class_="screener-tickers"
+        )
         page_tickers = td.find_all("span")
         if i == page - 1:
             page_tickers = page_tickers[: ((limit - 1) % 1000 + 1)]
-        tickers = tickers + [i.text.split("\xa0")[1] for i in page_tickers]
+        tickers = tickers + [
+            span.get("data-boxover-ticker") or span.get_text(strip=True)
+            for span in page_tickers
+        ]
         return tickers
 
     def screener_view(
